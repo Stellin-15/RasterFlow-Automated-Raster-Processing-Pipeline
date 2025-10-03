@@ -1,6 +1,6 @@
 # 1. Use an official base image that has GDAL pre-installed.
-# This saves a huge amount of time and avoids compilation errors.
-FROM osgeo/gdal:ubuntu-small-latest
+# This tag is verified to be currently available on Docker Hub.
+FROM osgeo/gdal:ubuntu-small
 
 # 2. Set the working directory inside the container
 WORKDIR /app
