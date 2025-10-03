@@ -1,12 +1,13 @@
 # 1. Use an official base image that has GDAL pre-installed.
-# This tag is verified to be currently available on Docker Hub.
-FROM osgeo/gdal:ubuntu-small
+# This tag is the latest full build based on Ubuntu and is verified to be available.
+FROM osgeo/gdal:ubuntu-full-latest
 
 # 2. Set the working directory inside the container
 WORKDIR /app
 
 # 3. Install Python and Pip
-RUN apt-get update && apt-get install -y python3-pip gdal-bin python3-gdal && \
+# The base image already has python, but we ensure pip and gdal-bin are present.
+RUN apt-get update && apt-get install -y python3-pip gdal-bin && \
     rm -rf /var/lib/apt/lists/*
 
 # 4. Copy and install Python requirements
