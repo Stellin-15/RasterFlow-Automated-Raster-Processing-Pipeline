@@ -1,5 +1,15 @@
+# app/models.py (add this new class)
+
 from pydantic import BaseModel
 from typing import List, Tuple
+
+# ... (your existing RasterMetadata and JobStatus classes are here) ...
+
+class JobStatus(BaseModel):
+    raster_id: str
+    status: str
+    message: str | None = None
+    filename: str | None = None # Add filename for better tracking
 
 class RasterMetadata(BaseModel):
     raster_id: str
@@ -10,7 +20,7 @@ class RasterMetadata(BaseModel):
     width: int
     height: int
 
-class JobStatus(BaseModel):
-    raster_id: str
-    status: str
-    message: str | None = None
+# --- NEW MODEL FOR BATCH RESPONSE ---
+class BatchJobResponse(BaseModel):
+    successful_jobs: List[JobStatus]
+    failed_uploads: List[dict] # e.g., [{"filename": "...", "error": "..."}]
