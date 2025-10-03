@@ -137,30 +137,31 @@ Response:
 4. **Get Raster Metadata**
 
 Once a job is complete, you can retrieve its metadata.
-
+```bash 
 curl http://localhost:8000/v1/rasters/<YOUR_RASTER_ID>/metadata
+```
 
 ## 🗺️ Using the Frontend Viewer
 
 After a raster has been successfully processed, get its raster_id.
 
-Open the frontend/index.html file in your web browser.
+Open the `frontend/index.html` file in your web browser.
 
-When prompted, paste the raster_id and click OK.
+When prompted, paste the `raster_id` and click OK.
 
 The map will load and automatically zoom to your processed raster layer.
 
 ## 🔮 Future Roadmap
 
-Vector Overlays: Burn GeoJSON features onto processed rasters.
+- **Vector Overlays:** Burn GeoJSON features onto processed rasters.
 
-Persistent Job Store: Replace the in-memory cache with Redis or a database for production resilience.
+- **Persistent Job Store:** Replace the in-memory cache with Redis or a database for production resilience.
 
-Cloud Integration: Watch an S3 bucket for new files to trigger ingestion automatically.
+- **Cloud Integration:** Watch an S3 bucket for new files to trigger ingestion automatically.
 
-Authentication: Add a simple API key layer for security.
+- **Authentication:** Add a simple API key layer for security.
 
-Integration with a Feature Store: Push raster metadata and statistics to a feature store for ML applications.
+- **Integration with a Feature Store:** Push raster metadata and statistics to a feature store for ML applications.
 
 ## 📜 License
 
