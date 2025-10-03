@@ -1,6 +1,6 @@
 # 1. Use an official base image that has GDAL pre-installed.
 # This saves a huge amount of time and avoids compilation errors.
-FROM osgeo/gdal:ubuntu-small-3.8.3
+FROM osgeo/gdal:ubuntu-small-latest
 
 # 2. Set the working directory inside the container
 WORKDIR /app
