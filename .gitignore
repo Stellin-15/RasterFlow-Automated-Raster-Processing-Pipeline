@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+*.egg-info/
+
+# Data files - Do not commit large datasets to Git!
+data/raw/*
+data/processed/*
+
+# IDE settings
+.vscode/
+.idea/
