@@ -55,7 +55,28 @@ Follow these instructions to get RasterFlow running on your local machine.
 
 2. **Build the Docker image:**
 
-This will build the environment from the Dockerfile, installing Ubuntu, GDAL, and all Python dependencies.
+This will build the environment from the `Dockerfile`, installing Ubuntu, GDAL, and all Python dependencies.
 ```bash
 docker build -t rasterflow .
 ```
+
+3. **Run the Docker container:**
+
+This command starts the application and maps the `data` directory to your local machine, so processed files are persisted.
+
+For Windows PowerShell:
+```bash
+docker run -d -p 8000:8000 -v "$(pwd)/data:/app/data" --name rasterflow-container rasterflow
+```
+
+For Windows Command Prompt (cmd.exe):
+```bash
+docker run -d -p 8000:8000 -v "%cd%/data:/app/data" --name rasterflow-container rasterflow
+```
+
+4. **Verify the server is running:**
+```bash
+docker ps
+```
+
+You should see `rasterflow-container` in the list of running containers.
