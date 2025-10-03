@@ -109,6 +109,7 @@ Place multiple rasters in the data/raw directory (e.g., sample.tif, sample2.tif)
 ```bash 
 curl -X POST -F "file=@data/raw/sample.tif" -F "file=@data/raw/sample2.tif" http://localhost:8000/v1/rasters/batch
 ```
+
 ```bash 
 Response:
 {
@@ -116,6 +117,7 @@ Response:
   "failed_jobs": [...]
 }
 ```
+
 3. **Check Job Status**
 
 Use the raster_id from the upload response.
