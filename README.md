@@ -86,11 +86,11 @@ You should see `rasterflow-container` in the list of running containers.
 
 Interact with the running service using a client like curl.
 
-1. Upload a Single Raster
+1. **Upload a Single Raster**
 
 Place a sample GeoTIFF (e.g., sample.tif) in the data/raw directory.
 
-curl -X POST -F "file=@data/raw/sample.tif" http://localhost:8000/v1/rasters
+``` curl -X POST -F "file=@data/raw/sample.tif" http://localhost:8000/v1/rasters ```
 
 
 Response:
@@ -101,7 +101,7 @@ Response:
   "message": "Upload accepted and validated."
 }
 
-2. Upload a Batch of Rasters
+2. **Upload a Batch of Rasters**
 
 Place multiple rasters in the data/raw directory (e.g., sample.tif, sample2.tif).
 
@@ -115,7 +115,7 @@ Response:
   "failed_jobs": [...]
 }
 
-3. Check Job Status
+3. **Check Job Status**
 
 Use the raster_id from the upload response.
 
@@ -129,7 +129,7 @@ Response:
   "status": "complete"
 }
 
-4. Get Raster Metadata
+4. **Get Raster Metadata**
 
 Once a job is complete, you can retrieve its metadata.
 
