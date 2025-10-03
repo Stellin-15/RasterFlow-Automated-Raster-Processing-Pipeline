@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RasterFlow Viewer</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS and JS from a CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        .info-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="info-box" id="info">Paste a Raster ID to begin.</div>
+
+<script>
+    // 1. Initialize the map with a default view
+    const map = L.map('map').setView([20, 0], 2);
+
+    // 2. Add a base map layer (like OpenStreetMap) for context
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const infoBox = document.getElementById('info');
+
+    // 3. Prompt the user for the Raster ID
+    const rasterId = prompt("Please enter the Raster ID from your upload:");
+
+    if (rasterId) {
+        infoBox.innerHTML = `Loading tiles for ID: <br><b>${rasterId}</b>`;
+        
+        // 4. Define the URL template for our raster tiles from the FastAPI backend
+        const tileUrl = `http://localhost:8000/v1/rasters/${rasterId}/tiles/{z}/{x}/{y}.png`;
+
+        // 5. Add our raster tile layer to the map
+        const rasterLayer = L.tileLayer(tileUrl, {
+            opacity: 0.8, // Make it slightly transparent to see the basemap
+            maxZoom: 16,  // Corresponds to the zoom levels we generated
+        }).addTo(map);
+
+        // 6. Fetch the metadata to automatically zoom the map to the raster's location
+        const metadataUrl = `http://localhost:8000/v1/rasters/${rasterId}/metadata`;
+        
+        fetch(metadataUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Metadata not found. Is the ID correct and processing complete?');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Leaflet needs bounds in a [[lat_min, lon_min], [lat_max, lon_max]] format.
+                // Our API provides [lon_min, lat_min, lon_max, lat_max]. We need to reorder it.
+                const bounds = [
+                    [data.bounds[1], data.bounds[0]], // [lat_min, lon_min]
+                    [data.bounds[3], data.bounds[2]]  // [lat_max, lon_max]
+                ];
+                
+                // Zoom the map to fit the bounds of our raster
+                map.fitBounds(bounds);
+                infoBox.innerHTML = `Successfully loaded raster: <br><b>${rasterId}</b>`;
+            })
+            .catch(error => {
+                console.error('Error fetching metadata:', error);
+                infoBox.innerHTML = `<b>Error:</b> ${error.message}`;
+            });
+
+    } else {
+        infoBox.innerHTML = 'No Raster ID entered.';
+    }
+</script>
+
+</body>
+</html>
