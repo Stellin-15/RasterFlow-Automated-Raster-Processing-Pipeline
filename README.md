@@ -80,3 +80,83 @@ docker ps
 ```
 
 You should see `rasterflow-container` in the list of running containers.
+
+
+## 📖 API Usage
+
+Interact with the running service using a client like curl.
+
+1. Upload a Single Raster
+
+Place a sample GeoTIFF (e.g., sample.tif) in the data/raw directory.
+
+curl -X POST -F "file=@data/raw/sample.tif" http://localhost:8000/v1/rasters
+
+
+Response:
+
+{
+  "raster_id": "...",
+  "status": "processing",
+  "message": "Upload accepted and validated."
+}
+
+2. Upload a Batch of Rasters
+
+Place multiple rasters in the data/raw directory (e.g., sample.tif, sample2.tif).
+
+curl -X POST -F "file=@data/raw/sample.tif" -F "file=@data/raw/sample2.tif" http://localhost:8000/v1/rasters/batch
+
+
+Response:
+
+{
+  "successful_jobs": [...],
+  "failed_jobs": [...]
+}
+
+3. Check Job Status
+
+Use the raster_id from the upload response.
+
+curl http://localhost:8000/v1/rasters/<YOUR_RASTER_ID>/status
+
+
+Response:
+
+{
+  "raster_id": "<YOUR_RASTER_ID>",
+  "status": "complete"
+}
+
+4. Get Raster Metadata
+
+Once a job is complete, you can retrieve its metadata.
+
+curl http://localhost:8000/v1/rasters/<YOUR_RASTER_ID>/metadata
+
+## 🗺️ Using the Frontend Viewer
+
+After a raster has been successfully processed, get its raster_id.
+
+Open the frontend/index.html file in your web browser.
+
+When prompted, paste the raster_id and click OK.
+
+The map will load and automatically zoom to your processed raster layer.
+
+## 🔮 Future Roadmap
+
+Vector Overlays: Burn GeoJSON features onto processed rasters.
+
+Persistent Job Store: Replace the in-memory cache with Redis or a database for production resilience.
+
+Cloud Integration: Watch an S3 bucket for new files to trigger ingestion automatically.
+
+Authentication: Add a simple API key layer for security.
+
+Integration with a Feature Store: Push raster metadata and statistics to a feature store for ML applications.
+
+## 📜 License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
