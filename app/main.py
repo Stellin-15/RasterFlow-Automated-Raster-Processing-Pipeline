@@ -1,4 +1,3 @@
-# app/main.py (Final Version with CORS and Batch Processing)
 import uuid
 import os
 from typing import List # <--- IMPORT LIST FOR BATCH PROCESSING
