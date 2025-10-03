@@ -94,21 +94,21 @@ Place a sample GeoTIFF (e.g., sample.tif) in the data/raw directory.
 curl -X POST -F "file=@data/raw/sample.tif" http://localhost:8000/v1/rasters 
 ```
 
-
+```bash 
 Response:
-
 {
   "raster_id": "...",
   "status": "processing",
   "message": "Upload accepted and validated."
 }
+```
 
 2. **Upload a Batch of Rasters**
 
 Place multiple rasters in the data/raw directory (e.g., sample.tif, sample2.tif).
-
+```bash 
 curl -X POST -F "file=@data/raw/sample.tif" -F "file=@data/raw/sample2.tif" http://localhost:8000/v1/rasters/batch
-
+```
 
 Response:
 
