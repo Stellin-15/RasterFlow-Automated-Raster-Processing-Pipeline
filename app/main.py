@@ -1,18 +1,20 @@
-# app/main.py (Final Version with CORS)
+# app/main.py (Final Version with CORS and Batch Processing)
 import uuid
 import os
+from typing import List # <--- IMPORT LIST FOR BATCH PROCESSING
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware # <--- NEW IMPORT
+from fastapi.middleware.cors import CORSMiddleware
 from osgeo import gdal
 
 from .cache import RASTER_CACHE
-from .models import RasterMetadata, JobStatus
+# IMPORT THE NEW BATCH RESPONSE MODEL
+from .models import RasterMetadata, JobStatus, BatchJobResponse
 from .processing import process_raster
 
 app = FastAPI(title="RasterFlow MVP")
 
-# --- NEW CORS MIDDLEWARE ---
+# --- CORS MIDDLEWARE ---
 # This allows the frontend (running in a browser) to communicate with the backend.
 origins = [
     "*",  # Allows all origins, for development purposes.
@@ -30,7 +32,6 @@ app.add_middleware(
 
 @app.post("/v1/rasters", response_model=JobStatus, status_code=202)
 async def upload_raster(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
-    # ... (the rest of the file is the same as before) ...
     """
     Accepts a raster file, saves it, validates it, and starts the processing pipeline.
     """
@@ -55,9 +56,65 @@ async def upload_raster(background_tasks: BackgroundTasks, file: UploadFile = Fi
             detail=f"Invalid raster file provided. Error: {e}"
         )
 
-    RASTER_CACHE[raster_id] = {"status": "processing"}
+    # Add filename to the cache for better tracking
+    RASTER_CACHE[raster_id] = {"status": "processing", "filename": file.filename}
     background_tasks.add_task(process_raster, raw_path, raster_id)
-    return JobStatus(raster_id=raster_id, status="processing", message="Upload accepted and validated.")
+    return JobStatus(
+        raster_id=raster_id, 
+        status="processing", 
+        message="Upload accepted and validated.",
+        filename=file.filename
+    )
+
+# --- NEW BATCH UPLOAD ENDPOINT ---
+@app.post("/v1/rasters/batch", response_model=BatchJobResponse, status_code=202)
+async def upload_raster_batch(
+    background_tasks: BackgroundTasks, files: List[UploadFile] = File(...)
+):
+    """
+    Accepts a batch of raster files, validates each, and starts processing for valid files.
+    """
+    successful_jobs = []
+    failed_uploads = []
+    raw_dir = "data/raw"
+    os.makedirs(raw_dir, exist_ok=True)
+
+    for file in files:
+        raster_id = str(uuid.uuid4())
+        raw_path = os.path.join(raw_dir, f"{raster_id}_{file.filename}")
+
+        # Save the uploaded file
+        with open(raw_path, "wb") as buffer:
+            buffer.write(await file.read())
+
+        # Validate the saved file
+        try:
+            ds = gdal.Open(raw_path)
+            if ds is None:
+                raise ValueError("GDAL could not open the file.")
+            ds = None # Close dataset
+
+            # If valid, create the job
+            RASTER_CACHE[raster_id] = {"status": "processing", "filename": file.filename}
+            background_tasks.add_task(process_raster, raw_path, raster_id)
+            successful_jobs.append(
+                JobStatus(
+                    raster_id=raster_id, 
+                    status="processing", 
+                    message="Upload accepted and validated.",
+                    filename=file.filename
+                )
+            )
+
+        except Exception as e:
+            # If invalid, log the failure and clean up
+            os.remove(raw_path)
+            failed_uploads.append({"filename": file.filename, "error": str(e)})
+
+    return BatchJobResponse(
+        successful_jobs=successful_jobs, failed_uploads=failed_uploads
+    )
+# --- END NEW ENDPOINT ---
 
 
 @app.get("/v1/rasters/{raster_id}/status", response_model=JobStatus)
