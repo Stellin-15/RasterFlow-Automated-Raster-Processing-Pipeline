@@ -1,28 +1,29 @@
-# 1. Use an official base image that has GDAL pre-installed.
-# This uses a specific, version-pinned tag that is verified to exist.
-FROM osgeo/gdal:v3.8.5
+# --- ULTIMATE FALLBACK DOCKERFILE ---
+# Use a standard Ubuntu base image
+FROM ubuntu:22.04
 
-# 2. Set the working directory inside the container
-WORKDIR /app
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
 
-# 3. Install Python and Pip
-# The base image already has python, but we ensure pip and gdal-bin are present.
-RUN apt-get update && apt-get install -y python3-pip gdal-bin && \
+# Update, add the official UbuntuGIS PPA for up-to-date geospatial libraries,
+# and install GDAL, its Python bindings, and pip.
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ubuntugis/ppa && \
+    apt-get update && \
+    apt-get install -y gdal-bin python3-gdal python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
-# 4. Copy and install Python requirements
+# Now, continue with the rest of the application setup
+WORKDIR /app
+
 COPY ./requirements.txt /app/requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# 5. Copy the application code into the container
 COPY ./app /app/app
 
-# 6. Create data directories inside the container (though we will mount them)
 RUN mkdir -p /app/data/raw && mkdir -p /app/data/processed
 
-# 7. Expose the port the app will run on
 EXPOSE 8000
 
-# 8. Define the command to run the application using Uvicorn
-# The --reload flag is great for development
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
