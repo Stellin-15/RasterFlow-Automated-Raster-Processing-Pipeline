@@ -90,7 +90,9 @@ Interact with the running service using a client like curl.
 
 Place a sample GeoTIFF (e.g., sample.tif) in the data/raw directory.
 
-``` curl -X POST -F "file=@data/raw/sample.tif" http://localhost:8000/v1/rasters ```
+```bash 
+curl -X POST -F "file=@data/raw/sample.tif" http://localhost:8000/v1/rasters 
+```
 
 
 Response:
