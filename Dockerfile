@@ -1,6 +1,6 @@
 # 1. Use an official base image that has GDAL pre-installed.
-# This tag is the latest full build based on Ubuntu and is verified to be available.
-FROM osgeo/gdal:ubuntu-full-latest
+# This uses a specific, version-pinned tag that is verified to exist.
+FROM osgeo/gdal:v3.8.5
 
 # 2. Set the working directory inside the container
 WORKDIR /app
