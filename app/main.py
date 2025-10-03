@@ -1,8 +1,9 @@
-# app/main.py (Updated Version)
+# app/main.py (Final Version with CORS)
 import uuid
 import os
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware # <--- NEW IMPORT
 from osgeo import gdal
 
 from .cache import RASTER_CACHE
@@ -11,8 +12,25 @@ from .processing import process_raster
 
 app = FastAPI(title="RasterFlow MVP")
 
+# --- NEW CORS MIDDLEWARE ---
+# This allows the frontend (running in a browser) to communicate with the backend.
+origins = [
+    "*",  # Allows all origins, for development purposes.
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"], # Allows all headers
+)
+# --- END CORS MIDDLEWARE ---
+
+
 @app.post("/v1/rasters", response_model=JobStatus, status_code=202)
 async def upload_raster(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    # ... (the rest of the file is the same as before) ...
     """
     Accepts a raster file, saves it, validates it, and starts the processing pipeline.
     """
@@ -22,35 +40,25 @@ async def upload_raster(background_tasks: BackgroundTasks, file: UploadFile = Fi
     
     raw_path = os.path.join(raw_dir, f"{raster_id}_{file.filename}")
 
-    # Save the uploaded file
     with open(raw_path, "wb") as buffer:
         buffer.write(await file.read())
 
-    # --- NEW VALIDATION STEP ---
-    # Try to open the file with GDAL. If it fails, it's not a valid raster.
     try:
         ds = gdal.Open(raw_path)
         if ds is None:
             raise ValueError("GDAL could not open the file. It may be corrupted or not a valid raster format.")
-        ds = None # Close the dataset
+        ds = None
     except Exception as e:
-        os.remove(raw_path) # Clean up the invalid saved file
+        os.remove(raw_path)
         raise HTTPException(
-            status_code=400, # Bad Request
+            status_code=400,
             detail=f"Invalid raster file provided. Error: {e}"
         )
-    # --- END VALIDATION STEP ---
 
-    # Initialize job status in cache
     RASTER_CACHE[raster_id] = {"status": "processing"}
-    
-    # Add the processing task to the background
     background_tasks.add_task(process_raster, raw_path, raster_id)
-    
     return JobStatus(raster_id=raster_id, status="processing", message="Upload accepted and validated.")
 
-
-# ... (the rest of the file remains the same) ...
 
 @app.get("/v1/rasters/{raster_id}/status", response_model=JobStatus)
 def get_raster_status(raster_id: str):
@@ -67,7 +75,7 @@ def get_raster_metadata(raster_id: str):
     return RasterMetadata(**job["metadata"])
 
 @app.get("/v1/rasters/{raster_id}/download")
-def download_reprojected_raster(raster_id: str):
+def download_reprocessed_raster(raster_id: str):
     job = RASTER_CACHE.get(raster_id)
     if not job or job.get("status") != "complete":
         raise HTTPException(status_code=404, detail="Raster not found or not yet processed.")
