@@ -121,16 +121,18 @@ Response:
 3. **Check Job Status**
 
 Use the raster_id from the upload response.
-
+```bash 
 curl http://localhost:8000/v1/rasters/<YOUR_RASTER_ID>/status
+```
 
-
+```bash 
 Response:
 
 {
   "raster_id": "<YOUR_RASTER_ID>",
   "status": "complete"
 }
+```
 
 4. **Get Raster Metadata**
 
